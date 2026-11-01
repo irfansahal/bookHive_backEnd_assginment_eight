@@ -1,6 +1,6 @@
 import dotEnv from "dotenv";
 dotEnv.config();
-import { MongoClient } from "mongodb"
+import { MongoClient , ObjectId } from "mongodb"
 import  cors from "cors"
 
 import express from "express"
@@ -70,7 +70,54 @@ app.get('/get-all-books', async ( req , res )=>{
    res.status(200).send({message : "Success" , allBooks})
 })
 
+app.get('/get-book/:id', async (req , res)=>{
+   const bookId = req.params.id;
+
+   const book = await booksCollections.findOne({_id : new  ObjectId(bookId)});
+   res.status(200).send({message : "success", book})
+})
+
+app.get('/get-my-books/:email', async (req , res)=>{
+   const userEmail = req.params.email;
+   const myBooks = await booksCollections.find({
+    email : { $eq : userEmail }
+   }).toArray();
+   
+   res.status(200).send({
+    message : "success",
+    myBooks
+   })
+})
+
+app.patch('/update-book/:id', async( req , res )=>{
+      const bookId = req.params.id;
+      const updateBody = req.body;
+
+      const updatedBook = await booksCollections.updateOne(
+         { _id : new ObjectId(bookId)},
+         { $set : updateBody }
+    );
+    
+    res.status(200).json({
+        message : "success",
+        updatedBook
+    })
+})
+
+app.delete('/delete-book/:id', async (req , res)=>{
+    const bookId = req.params.id;
+
+    const deletedBook = await booksCollections.deleteOne({
+        _id : new ObjectId(bookId)
+    });
+    
+    res.status(200).json({
+        message : "success",
+        deletedBook
+    })
+})
+
 app.listen(port, ()=>{
     console.log(`The server is running on port ${port}`);
-  
+    
 })
