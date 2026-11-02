@@ -2,7 +2,7 @@ import dotEnv from "dotenv";
 dotEnv.config();
 import { MongoClient , ObjectId } from "mongodb"
 import  cors from "cors"
-
+import { createRemoteJWKSet, jwtVerify } from "jose"
 import express from "express"
 
 const app = express();
@@ -33,6 +33,26 @@ const borrowsCallections = await dataBase.collection("borrows");
 app.use(cors());
 app.use(express.json())
 
+
+const validation =async (req , res , next ) => {
+   const authHeader = req.headers.authorization
+
+   const token = authHeader.split(" ")[1]
+
+   const JWKS = createRemoteJWKSet(
+    new URL('http://localhost:3000/api/auth/jwks')
+   );
+
+   try {
+    const {  payload } = await jwtVerify(token, JWKS);
+   console.log("from server", token);
+   next()
+   } catch (error) {
+    return res.status(500).send({ message : "Server Error!"})
+   }
+}
+
+
 app.get('/', (req ,res)=>{
     res.send("The server is running on port 800")
 })
@@ -50,7 +70,7 @@ app.get('/', (req ,res)=>{
 // })
 
 // adding books collection
-app.post('/add-book', async (req , res )=>{
+app.post('/add-book', validation ,async (req , res )=>{
     const requestBody = req.body;
 
      const currentDate = new Date().toLocaleDateString("en-US", {
@@ -66,7 +86,7 @@ app.post('/add-book', async (req , res )=>{
     })
 })
 
-app.get('/get-all-books', async ( req , res )=>{
+app.get('/get-all-books' ,async ( req , res )=>{
    const allBooks = await booksCollections.find({}).toArray();
    res.status(200).send({message : "Success" , allBooks})
 })
