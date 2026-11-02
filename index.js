@@ -28,6 +28,7 @@ const dataBase = await client.db("bookHive_assginment_eight");
 
 const userCollections = await dataBase.collection("users");
 const booksCollections = await dataBase.collection("books");
+const borrowsCallections = await dataBase.collection("borrows");
 
 app.use(cors());
 app.use(express.json())
@@ -115,6 +116,34 @@ app.delete('/delete-book/:id', async (req , res)=>{
         message : "success",
         deletedBook
     })
+})
+
+app.post('/create-brrow', async(req , res)=>{
+    const borrowBody = req.body
+    const newBrrowed = await borrowsCallections.insertOne(borrowBody);
+    res.status(200).json({
+        message : "Success",
+        newBrrowed
+    }) 
+})
+
+app.get('/borrows', async (req , res ) =>{
+     const myBoorows = await borrowsCallections.find({}).toArray();
+     res.status(200).send({
+        message : "Success",
+        myBoorows
+     })
+})
+
+app.delete("/borrow/:id" , async (req , res)=>{
+   const borrowId = req.params.id
+    const deletedBorrow = await borrowsCallections.deleteOne({
+        _id : new ObjectId(borrowId)
+    });
+    res.status(200).json({
+        message : "success",
+        deletedBorrow
+    }) 
 })
 
 app.listen(port, ()=>{
