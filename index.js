@@ -78,7 +78,7 @@ app.post('/add-book', validation ,async (req , res )=>{
          month : "long",
         year : "numeric"
      });
-    const newBook = await booksCollections.insertOne({...requestBody,createdAt :currentDate});
+    const newBook = await booksCollections.insertOne({...requestBody,createdAt :currentDate , createdAtAsUTC : new Date()});
 
     res.status(200).send({
         message : "Success",
@@ -90,6 +90,14 @@ app.get('/get-all-books' ,async ( req , res )=>{
    const allBooks = await booksCollections.find({}).toArray();
    res.status(200).send({message : "Success" , allBooks})
 })
+
+app.get('/get-new-arrivals', async (req , res)=>{
+    const sixNewArrivalsBooks = await booksCollections.find({}).limit(6).sort({createdAtAsUTC : -1}).toArray()
+    res.status(200).json({
+        message : "success",
+        sixNewArrivalsBooks
+    })
+});
 
 app.get('/get-book/:id', async (req , res)=>{
    const bookId = req.params.id;
@@ -140,15 +148,45 @@ app.delete('/delete-book/:id', async (req , res)=>{
 
 app.post('/create-brrow', async(req , res)=>{
     const borrowBody = req.body
-    const newBrrowed = await borrowsCallections.insertOne(borrowBody);
+    
+    const isBorrowExists = await borrowsCallections.findOne({
+            book_Id : borrowBody.book_Id ,
+            userEmail :  borrowBody.userEmail 
+    })
+    
+    if(isBorrowExists){
+        return res.status(400).json({
+            message : "You already browed the same item"
+        })
+    }
+
+   const exactBook = await booksCollections.findOne({
+     _id : new ObjectId(borrowBody.book_Id)
+   })
+
+    if(exactBook.copy <= 0 || !exactBook.copy ){
+       return res.status(400).json({
+        message : "Current Book Copy Have finished"
+       })
+    }
+
+    booksCollections.updateOne(
+        { _id : new ObjectId(borrowBody.book_Id)},
+        { $set : { ...exactBook, copy : exactBook.copy - 1}} 
+    ) 
+
+    const newBrrowed = await borrowsCallections.insertOne({...borrowBody, copy : 1});
     res.status(200).json({
         message : "Success",
         newBrrowed
     }) 
 })
 
-app.get('/borrows', async (req , res ) =>{
-     const myBoorows = await borrowsCallections.find({}).toArray();
+app.get('/borrows/:email', async (req , res ) =>{
+    const CurrentUserEmail = req.params.email
+     const myBoorows = await borrowsCallections.find({ 
+        userEmail : { $eq : CurrentUserEmail}
+     }).toArray();
      res.status(200).send({
         message : "Success",
         myBoorows
@@ -157,6 +195,22 @@ app.get('/borrows', async (req , res ) =>{
 
 app.delete("/borrow/:id" , async (req , res)=>{
    const borrowId = req.params.id
+    
+   const currentBorrow = await borrowsCallections.findOne({
+    _id : new ObjectId(borrowId)
+   });
+     
+    const exactBook = await booksCollections.findOne({
+        _id : new ObjectId(currentBorrow.book_Id)
+    })
+    
+    await booksCollections.updateOne(
+        { _id : new ObjectId(exactBook._id)},
+        {
+            $set : { ...exactBook , copy : exactBook.copy + 1 }
+        }
+    )
+
     const deletedBorrow = await borrowsCallections.deleteOne({
         _id : new ObjectId(borrowId)
     });
