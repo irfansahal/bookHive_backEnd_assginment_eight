@@ -4,6 +4,7 @@ import { MongoClient , ObjectId } from "mongodb"
 import  cors from "cors"
 import { createRemoteJWKSet, jwtVerify } from "jose"
 import express from "express"
+import multer from "multer";
 
 const app = express();
 
@@ -75,19 +76,34 @@ app.get('/', (req ,res)=>{
 // })
 
 // adding books collection
+
+//  const upload = multer({ storage : multer.memoryStorage(), limits: {
+// //     fileSize: 5 * 1024 * 1024
+// //   },
+// //   fileFilter: (req, file, cb) => {
+// //     if (file.mimetype.startsWith("image/")) {
+// //       cb(null, true);
+// //     } else {
+// //       cb(new Error("Only image files are allowed"));
+// //     }
+//   } })
+
 app.post('/add-book', validation ,async (req , res )=>{
     const requestBody = req.body;
-
+    console.log("body",requestBody);
+    console.log("file",req.file);
+    
+    
      const currentDate = new Date().toLocaleDateString("en-US", {
          day : "numeric",
          month : "long",
         year : "numeric"
      });
-    const newBook = await booksCollections.insertOne({...requestBody,createdAt :currentDate , createdAtAsUTC : new Date()});
+     const newBook = await booksCollections.insertOne({...requestBody,createdAt :currentDate , createdAtAsUTC : new Date()});
 
     res.status(200).send({
         message : "Success",
-        newBook
+         newBook
     })
 })
 
@@ -224,6 +240,11 @@ app.delete("/borrow/:id" , async (req , res)=>{
         deletedBorrow
     }) 
 })
+
+// categories
+
+// app.get("/cat")
+
 
 app.listen(port, ()=>{
     console.log(`The server is running on port ${port}`);
