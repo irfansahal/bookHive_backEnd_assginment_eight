@@ -36,11 +36,16 @@ app.use(express.json())
 
 const validation =async (req , res , next ) => {
    const authHeader = req.headers.authorization
-
-   const token = authHeader.split(" ")[1]
+     if (!authHeader) {
+    return res.status(401).send({ msg: "Unauthorized!" });
+  }
+    const token = authHeader.split(" ")[1]
+     if (!token) {
+    return res.status(401).send({ msg: "Unauthorized!" });
+  }
 
    const JWKS = createRemoteJWKSet(
-    new URL('http://localhost:3000/api/auth/jwks')
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
    );
 
    try {
@@ -118,7 +123,7 @@ app.get('/get-my-books/:email', async (req , res)=>{
    })
 })
 
-app.patch('/update-book/:id', async( req , res )=>{
+app.patch('/update-book/:id', validation , async( req , res )=>{
       const bookId = req.params.id;
       const updateBody = req.body;
 
@@ -133,7 +138,7 @@ app.patch('/update-book/:id', async( req , res )=>{
     })
 })
 
-app.delete('/delete-book/:id', async (req , res)=>{
+app.delete('/delete-book/:id', validation , async (req , res)=>{
     const bookId = req.params.id;
 
     const deletedBook = await booksCollections.deleteOne({
@@ -146,7 +151,7 @@ app.delete('/delete-book/:id', async (req , res)=>{
     })
 })
 
-app.post('/create-brrow', async(req , res)=>{
+app.post('/create-brrow', validation,  async(req , res)=>{
     const borrowBody = req.body
     
     const isBorrowExists = await borrowsCallections.findOne({
