@@ -3,7 +3,7 @@
 
 BookHive , This is server side project for BookHive backend.
 
-1. There are 11 API end point were made .
+1. There are 12 + API end point were made .
 
 2. There validation system added to some routes like add book or update books and delete books and borrow book using jwt and jwks.
 
@@ -11,6 +11,8 @@ BookHive , This is server side project for BookHive backend.
 
 4. There we made four collections in database like "users" , "books" , 
  "borrows" , "categories"
+
+5. I added more api endpoint for categorywise filtering 
 
  [Live link for website](https://bookhiveassignmenteightfrontend.vercel.app);
 
