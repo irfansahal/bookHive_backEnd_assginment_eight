@@ -30,6 +30,8 @@ const dataBase = await client.db("bookHive_assginment_eight");
 const userCollections = await dataBase.collection("users");
 const booksCollections = await dataBase.collection("books");
 const borrowsCallections = await dataBase.collection("borrows");
+const categoriesCallections = await dataBase.collection("categories");
+
 
 app.use(cors());
 app.use(express.json())
@@ -243,7 +245,13 @@ app.delete("/borrow/:id" , async (req , res)=>{
 
 // categories
 
-// app.get("/cat")
+ app.get("/category", async (req , res)=>{
+        const categories = await categoriesCallections.find({}).toArray();
+
+        res.status(200).json({ message : "success",
+             categories
+        })
+ })
 
 
 app.listen(port, ()=>{
