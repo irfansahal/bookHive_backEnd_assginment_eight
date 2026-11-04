@@ -253,6 +253,25 @@ app.delete("/borrow/:id" , async (req , res)=>{
         })
  })
 
+  app.get('/books-by-category/:category', async (req , res)=>{
+    
+    const category = req.params.category
+
+    const currentCategory = await categoriesCallections.findOne({
+        title : { $eq : category  }
+    });
+
+    const currentCategoryBooks = await booksCollections.find({
+        category : { $eq : category}
+    }).toArray()
+
+    res.status(200).json({
+        message : "success",
+        currentCategory,
+        currentCategoryBooks
+    })
+
+  })
 
 app.listen(port, ()=>{
     console.log(`The server is running on port ${port}`);
